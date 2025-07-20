@@ -63,7 +63,9 @@ def __generate_battle_features(users_df: pd.DataFrame, events_df: pd.DataFrame) 
 
 def __generate_session_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.DataFrame:
     df = users_df.copy()
-    l_df = events_df[events_df['event_name'] == 'login']
+    l_df = events_df[events_df['event_name'] == 'login'].copy()
+
+    l_df['event_date'] = l_df['event_ts'].dt.normalize()
 
     l_df_d0 = l_df[l_df['event_ts'] <= l_df['d0']]
     l_df_d1 = l_df[l_df['event_ts'] <= l_df['d1']]
@@ -82,11 +84,13 @@ def __generate_session_features(users_df: pd.DataFrame, events_df: pd.DataFrame)
 
     df['inactive_d1'] = (df['session_time_d1'] == df['session_time_d0']).astype(int)
 
-    # TODO: n_active_days
+    df['n_active_days'] = l_df[['user_id', 'event_date']].groupby(by='user_id').nunique()['event_date']
+
+    df['n_active_days'] = df['n_active_days'].fillna(0).astype(int)
 
     return df[[
         'session_time_d0', 'session_time_d1', 'session_time_d3', 'session_time_d7',
-        'inactive_d1'
+        'inactive_d1', 'n_active_days',
     ]]
 
 
