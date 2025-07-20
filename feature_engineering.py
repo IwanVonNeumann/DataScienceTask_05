@@ -113,8 +113,12 @@ def __generate_wealth_features(users_df: pd.DataFrame, events_df: pd.DataFrame) 
     df['wealth_on_login_max_d3'] = df['wealth_on_login_max_d3'].fillna(0)
     df['wealth_on_login_max_d7'] = df['wealth_on_login_max_d7'].fillna(0)
 
+    df['wealth_on_login_max_d0=802'] = (df['wealth_on_login_max_d0'] == 802).astype(int)
+    df['wealth_on_login_max_d7=802'] = (df['wealth_on_login_max_d7'] == 802).astype(int)
+
     return df[[
         'wealth_on_login_max_d0', 'wealth_on_login_max_d1', 'wealth_on_login_max_d3', 'wealth_on_login_max_d7',
+        'wealth_on_login_max_d0=802', 'wealth_on_login_max_d7=802',
     ]]
 
 
