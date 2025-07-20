@@ -13,6 +13,7 @@ def generate_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.Dat
     events_df['d7'] = events_df['reg_ts'].dt.normalize() + pd.Timedelta(days=7, hours=23, minutes=59, seconds=59)
 
     battle_features = __generate_battle_features(df, events_df)
+    session_features = __generate_session_features(df, events_df)
 
     return df
 
@@ -47,4 +48,33 @@ def __generate_battle_features(users_df: pd.DataFrame, events_df: pd.DataFrame) 
     return df[[
         'battles_won_d0', 'battles_won_d1', 'battles_won_d3', 'battles_won_d7',
         'battles_lost_d0', 'battles_lost_d1', 'battles_lost_d3', 'battles_lost_d7',
+    ]]
+
+
+def __generate_session_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.DataFrame:
+    df = users_df.copy()
+    l_df = events_df[events_df['event_name'] == 'login']
+
+    l_df_d0 = l_df[l_df['event_ts'] <= l_df['d0']]
+    l_df_d1 = l_df[l_df['event_ts'] <= l_df['d1']]
+    l_df_d3 = l_df[l_df['event_ts'] <= l_df['d3']]
+    l_df_d7 = l_df[l_df['event_ts'] <= l_df['d7']]
+
+    df['session_time_d0'] = l_df_d0[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+    df['session_time_d1'] = l_df_d1[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+    df['session_time_d3'] = l_df_d3[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+    df['session_time_d7'] = l_df_d7[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+
+    df['session_time_d0'] = df['session_time_d0'].fillna(0)
+    df['session_time_d1'] = df['session_time_d1'].fillna(0)
+    df['session_time_d3'] = df['session_time_d3'].fillna(0)
+    df['session_time_d7'] = df['session_time_d7'].fillna(0)
+
+    df['inactive_d1'] = (df['session_time_d1'] == df['session_time_d0']).astype(int)
+
+    # TODO: n_active_days
+
+    return df[[
+        'session_time_d0', 'session_time_d1', 'session_time_d3', 'session_time_d7',
+        'inactive_d1'
     ]]
