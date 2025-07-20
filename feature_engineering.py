@@ -17,6 +17,7 @@ def generate_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.Dat
     wealth_features = __generate_wealth_features(df, events_df)
     quest_features = __generate_quest_features(df, events_df)
     level_features = __generate_level_features(df, events_df)
+    payment_features = __generate_payment_features(df, events_df)
 
     return df
 
@@ -152,4 +153,28 @@ def __generate_level_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -
 
     return df[[
         'level_up_max_d0', 'level_up_max_d1', 'level_up_max_d3', 'level_up_max_d7',
+    ]]
+
+
+def __generate_payment_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.DataFrame:
+    df = users_df.copy()
+    p_df = events_df[events_df['event_name'] == 'payment']
+
+    p_df_d0 = p_df[p_df['event_ts'] <= p_df['d0']]
+    p_df_d1 = p_df[p_df['event_ts'] <= p_df['d1']]
+    p_df_d3 = p_df[p_df['event_ts'] <= p_df['d3']]
+    p_df_d7 = p_df[p_df['event_ts'] <= p_df['d7']]
+
+    df['payment_sum_d0'] = p_df_d0[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+    df['payment_sum_d1'] = p_df_d1[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+    df['payment_sum_d3'] = p_df_d3[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+    df['payment_sum_d7'] = p_df_d7[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+
+    df['payment_sum_d0'] = df['payment_sum_d0'].fillna(0)
+    df['payment_sum_d1'] = df['payment_sum_d1'].fillna(0)
+    df['payment_sum_d3'] = df['payment_sum_d3'].fillna(0)
+    df['payment_sum_d7'] = df['payment_sum_d7'].fillna(0)
+
+    return df[[
+        'payment_sum_d0', 'payment_sum_d1', 'payment_sum_d3', 'payment_sum_d7',
     ]]
