@@ -15,6 +15,7 @@ def generate_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.Dat
     battle_features = __generate_battle_features(df, events_df)
     session_features = __generate_session_features(df, events_df)
     wealth_features = __generate_wealth_features(df, events_df)
+    quest_features = __generate_quest_features(df, events_df)
 
     return df
 
@@ -102,4 +103,28 @@ def __generate_wealth_features(users_df: pd.DataFrame, events_df: pd.DataFrame) 
 
     return df[[
         'wealth_on_login_max_d0', 'wealth_on_login_max_d1', 'wealth_on_login_max_d3', 'wealth_on_login_max_d7',
+    ]]
+
+
+def __generate_quest_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.DataFrame:
+    df = users_df.copy()
+    f_df = events_df[events_df['event_name'] == 'finish_quest']
+
+    f_df_d0 = f_df[f_df['event_ts'] <= f_df['d0']]
+    f_df_d1 = f_df[f_df['event_ts'] <= f_df['d1']]
+    f_df_d3 = f_df[f_df['event_ts'] <= f_df['d3']]
+    f_df_d7 = f_df[f_df['event_ts'] <= f_df['d7']]
+
+    df['finish_quest_sum_d0'] = f_df_d0[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+    df['finish_quest_sum_d1'] = f_df_d1[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+    df['finish_quest_sum_d3'] = f_df_d3[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+    df['finish_quest_sum_d7'] = f_df_d7[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+
+    df['finish_quest_sum_d0'] = df['finish_quest_sum_d0'].fillna(0).astype(int)
+    df['finish_quest_sum_d1'] = df['finish_quest_sum_d1'].fillna(0).astype(int)
+    df['finish_quest_sum_d3'] = df['finish_quest_sum_d3'].fillna(0).astype(int)
+    df['finish_quest_sum_d7'] = df['finish_quest_sum_d7'].fillna(0).astype(int)
+
+    return df[[
+        'finish_quest_sum_d0', 'finish_quest_sum_d1', 'finish_quest_sum_d3', 'finish_quest_sum_d7',
     ]]
