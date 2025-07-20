@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def generate_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.DataFrame:
-    df = users_df.copy()
+    df: pd.DataFrame = users_df.copy()
     events_df = events_df.copy()
 
     events_df = pd.merge(left=events_df, right=df[['reg_ts']], left_on='user_id', right_index=True, how='left')
@@ -19,7 +19,13 @@ def generate_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.Dat
     level_features = __generate_level_features(df, events_df)
     payment_features = __generate_payment_features(df, events_df)
 
-    return df
+    return df \
+        .join(battle_features, how='left') \
+        .join(session_features, how='left') \
+        .join(wealth_features, how='left') \
+        .join(quest_features, how='left') \
+        .join(level_features, how='left') \
+        .join(payment_features, how='left')
 
 
 def __generate_battle_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.DataFrame:
