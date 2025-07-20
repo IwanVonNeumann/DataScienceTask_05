@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def generate_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.DataFrame:
+def generate_event_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.DataFrame:
     df: pd.DataFrame = users_df.copy()
     events_df = events_df.copy()
 
