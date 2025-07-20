@@ -16,6 +16,7 @@ def generate_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.Dat
     session_features = __generate_session_features(df, events_df)
     wealth_features = __generate_wealth_features(df, events_df)
     quest_features = __generate_quest_features(df, events_df)
+    level_features = __generate_level_features(df, events_df)
 
     return df
 
@@ -127,4 +128,28 @@ def __generate_quest_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -
 
     return df[[
         'finish_quest_sum_d0', 'finish_quest_sum_d1', 'finish_quest_sum_d3', 'finish_quest_sum_d7',
+    ]]
+
+
+def __generate_level_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> pd.DataFrame:
+    df = users_df.copy()
+    lv_df = events_df[events_df['event_name'] == 'level_up']
+
+    lv_df_d0 = lv_df[lv_df['event_ts'] <= lv_df['d0']]
+    lv_df_d1 = lv_df[lv_df['event_ts'] <= lv_df['d1']]
+    lv_df_d3 = lv_df[lv_df['event_ts'] <= lv_df['d3']]
+    lv_df_d7 = lv_df[lv_df['event_ts'] <= lv_df['d7']]
+
+    df['level_up_max_d0'] = lv_df_d0[['user_id', 'event_value']].groupby(by='user_id').max()['event_value']
+    df['level_up_max_d1'] = lv_df_d1[['user_id', 'event_value']].groupby(by='user_id').max()['event_value']
+    df['level_up_max_d3'] = lv_df_d3[['user_id', 'event_value']].groupby(by='user_id').max()['event_value']
+    df['level_up_max_d7'] = lv_df_d7[['user_id', 'event_value']].groupby(by='user_id').max()['event_value']
+
+    df['level_up_max_d0'] = df['level_up_max_d0'].fillna(0).astype(int)
+    df['level_up_max_d1'] = df['level_up_max_d1'].fillna(0).astype(int)
+    df['level_up_max_d3'] = df['level_up_max_d3'].fillna(0).astype(int)
+    df['level_up_max_d7'] = df['level_up_max_d7'].fillna(0).astype(int)
+
+    return df[[
+        'level_up_max_d0', 'level_up_max_d1', 'level_up_max_d3', 'level_up_max_d7',
     ]]
