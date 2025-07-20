@@ -1,12 +1,14 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+from pandas.io.formats.style import Styler
 
 
 def thousand_separators(x):
     return '{:,}'.format(x).replace(',', ' ')
 
 
-def get_target_pivot(df: pd.DataFrame, col: str, target_col: str = 'ltv_30') -> pd.io.formats.style.Styler:
+def get_target_pivot(df: pd.DataFrame, col: str, target_col: str = 'ltv_30') -> Styler:
     grouped_df = df.groupby(col, observed=True)
 
     summary = grouped_df[target_col].agg([
