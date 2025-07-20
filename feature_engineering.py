@@ -19,7 +19,7 @@ def generate_event_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -> 
     level_features = __generate_level_features(df, events_df)
     payment_features = __generate_payment_features(df, events_df)
 
-    return df \
+    return df[[]] \
         .join(battle_features, how='left') \
         .join(session_features, how='left') \
         .join(wealth_features, how='left') \
