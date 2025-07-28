@@ -55,9 +55,15 @@ def __generate_battle_features(users_df: pd.DataFrame, events_df: pd.DataFrame) 
     df['battles_lost_d3'] = df['battles_lost_d3'].fillna(0)
     df['battles_lost_d7'] = df['battles_lost_d7'].fillna(0)
 
+    df['battles_win_ratio_d0'] = df['battles_won_d0'] / (df['battles_lost_d0'] + 1e6)
+    df['battles_win_ratio_d1'] = df['battles_won_d1'] / (df['battles_lost_d1'] + 1e6)
+    df['battles_win_ratio_d3'] = df['battles_won_d3'] / (df['battles_lost_d3'] + 1e6)
+    df['battles_win_ratio_d7'] = df['battles_won_d7'] / (df['battles_lost_d7'] + 1e6)
+
     return df[[
         'battles_won_d0', 'battles_won_d1', 'battles_won_d3', 'battles_won_d7',
         'battles_lost_d0', 'battles_lost_d1', 'battles_lost_d3', 'battles_lost_d7',
+        'battles_win_ratio_d0', 'battles_win_ratio_d1', 'battles_win_ratio_d3', 'battles_win_ratio_d7',
     ]]
 
 
@@ -82,6 +88,26 @@ def __generate_session_features(users_df: pd.DataFrame, events_df: pd.DataFrame)
     df['session_time_d3'] = df['session_time_d3'].fillna(0)
     df['session_time_d7'] = df['session_time_d7'].fillna(0)
 
+    df['session_mean_d0'] = l_df_d0[['user_id', 'event_value']].groupby(by='user_id').mean()['event_value']
+    df['session_mean_d1'] = l_df_d1[['user_id', 'event_value']].groupby(by='user_id').mean()['event_value']
+    df['session_mean_d3'] = l_df_d3[['user_id', 'event_value']].groupby(by='user_id').mean()['event_value']
+    df['session_mean_d7'] = l_df_d7[['user_id', 'event_value']].groupby(by='user_id').mean()['event_value']
+
+    df['session_mean_d0'] = df['session_mean_d0'].fillna(0)
+    df['session_mean_d1'] = df['session_mean_d1'].fillna(0)
+    df['session_mean_d3'] = df['session_mean_d3'].fillna(0)
+    df['session_mean_d7'] = df['session_mean_d7'].fillna(0)
+
+    df['n_sessions_d0'] = l_df_d0[['user_id', 'event_value']].groupby(by='user_id').count()['event_value']
+    df['n_sessions_d1'] = l_df_d1[['user_id', 'event_value']].groupby(by='user_id').count()['event_value']
+    df['n_sessions_d3'] = l_df_d3[['user_id', 'event_value']].groupby(by='user_id').count()['event_value']
+    df['n_sessions_d7'] = l_df_d7[['user_id', 'event_value']].groupby(by='user_id').count()['event_value']
+
+    df['n_sessions_d0'] = df['n_sessions_d0'].fillna(0).astype(int)
+    df['n_sessions_d1'] = df['n_sessions_d1'].fillna(0).astype(int)
+    df['n_sessions_d3'] = df['n_sessions_d3'].fillna(0).astype(int)
+    df['n_sessions_d7'] = df['n_sessions_d7'].fillna(0).astype(int)
+
     df['inactive_d1'] = (df['session_time_d1'] == df['session_time_d0']).astype(int)
 
     df['n_active_days'] = l_df[['user_id', 'event_date']].groupby(by='user_id').nunique()['event_date']
@@ -90,6 +116,8 @@ def __generate_session_features(users_df: pd.DataFrame, events_df: pd.DataFrame)
 
     return df[[
         'session_time_d0', 'session_time_d1', 'session_time_d3', 'session_time_d7',
+        'session_mean_d0', 'session_mean_d1', 'session_mean_d3', 'session_mean_d7',
+        'n_sessions_d0', 'n_sessions_d1', 'n_sessions_d3', 'n_sessions_d7',
         'inactive_d1', 'n_active_days',
     ]]
 
@@ -113,11 +141,32 @@ def __generate_wealth_features(users_df: pd.DataFrame, events_df: pd.DataFrame) 
     df['wealth_on_login_max_d3'] = df['wealth_on_login_max_d3'].fillna(0)
     df['wealth_on_login_max_d7'] = df['wealth_on_login_max_d7'].fillna(0)
 
+    df['wealth_on_login_min_d0'] = w_df_d0[['user_id', 'event_value']].groupby(by='user_id').min()['event_value']
+    df['wealth_on_login_min_d1'] = w_df_d1[['user_id', 'event_value']].groupby(by='user_id').min()['event_value']
+    df['wealth_on_login_min_d3'] = w_df_d3[['user_id', 'event_value']].groupby(by='user_id').min()['event_value']
+    df['wealth_on_login_min_d7'] = w_df_d7[['user_id', 'event_value']].groupby(by='user_id').min()['event_value']
+
+    df['wealth_on_login_min_d0'] = df['wealth_on_login_min_d0'].fillna(0)
+    df['wealth_on_login_min_d1'] = df['wealth_on_login_min_d1'].fillna(0)
+    df['wealth_on_login_min_d3'] = df['wealth_on_login_min_d3'].fillna(0)
+    df['wealth_on_login_min_d7'] = df['wealth_on_login_min_d7'].fillna(0)
+
+    df['wealth_growth_d0_d1'] = df['wealth_on_login_max_d1'] - df['wealth_on_login_max_d0']
+    df['wealth_growth_d1_d3'] = df['wealth_on_login_max_d3'] - df['wealth_on_login_max_d1']
+    df['wealth_growth_d3_d7'] = df['wealth_on_login_max_d7'] - df['wealth_on_login_max_d3']
+
+    df['wealth_growth_ratio_d0_d1'] = df['wealth_on_login_max_d1'] / (df['wealth_on_login_max_d0'] + 1e6)
+    df['wealth_growth_ratio_d1_d3'] = df['wealth_on_login_max_d3'] / (df['wealth_on_login_max_d1'] + 1e6)
+    df['wealth_growth_ratio_d3_d7'] = df['wealth_on_login_max_d7'] / (df['wealth_on_login_max_d3'] + 1e6)
+
     df['wealth_on_login_max_d0=802'] = (df['wealth_on_login_max_d0'] == 802).astype(int)
     df['wealth_on_login_max_d7=802'] = (df['wealth_on_login_max_d7'] == 802).astype(int)
 
     return df[[
         'wealth_on_login_max_d0', 'wealth_on_login_max_d1', 'wealth_on_login_max_d3', 'wealth_on_login_max_d7',
+        'wealth_on_login_min_d0', 'wealth_on_login_min_d1', 'wealth_on_login_min_d3', 'wealth_on_login_min_d7',
+        'wealth_growth_d0_d1', 'wealth_growth_d1_d3', 'wealth_growth_d3_d7',
+        'wealth_growth_ratio_d0_d1', 'wealth_growth_ratio_d1_d3', 'wealth_growth_ratio_d3_d7',
         'wealth_on_login_max_d0=802', 'wealth_on_login_max_d7=802',
     ]]
 
@@ -131,18 +180,52 @@ def __generate_quest_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -
     f_df_d3 = f_df[f_df['event_ts'] <= f_df['d3']]
     f_df_d7 = f_df[f_df['event_ts'] <= f_df['d7']]
 
-    df['finish_quest_sum_d0'] = f_df_d0[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
-    df['finish_quest_sum_d1'] = f_df_d1[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
-    df['finish_quest_sum_d3'] = f_df_d3[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
-    df['finish_quest_sum_d7'] = f_df_d7[['user_id', 'event_value']].groupby(by='user_id').sum()['event_value']
+    agg_cols = ['user_id', 'event_value']
+
+    df['finish_quest_sum_d0'] = f_df_d0[agg_cols].groupby(by='user_id').sum()['event_value']
+    df['finish_quest_sum_d1'] = f_df_d1[agg_cols].groupby(by='user_id').sum()['event_value']
+    df['finish_quest_sum_d3'] = f_df_d3[agg_cols].groupby(by='user_id').sum()['event_value']
+    df['finish_quest_sum_d7'] = f_df_d7[agg_cols].groupby(by='user_id').sum()['event_value']
 
     df['finish_quest_sum_d0'] = df['finish_quest_sum_d0'].fillna(0).astype(int)
     df['finish_quest_sum_d1'] = df['finish_quest_sum_d1'].fillna(0).astype(int)
     df['finish_quest_sum_d3'] = df['finish_quest_sum_d3'].fillna(0).astype(int)
     df['finish_quest_sum_d7'] = df['finish_quest_sum_d7'].fillna(0).astype(int)
 
+    f_df_d0_f40 = f_df_d0[f_df_d0['event_value'] == 40]
+    f_df_d1_f40 = f_df_d1[f_df_d1['event_value'] == 40]
+    f_df_d3_f40 = f_df_d3[f_df_d3['event_value'] == 40]
+    f_df_d7_f40 = f_df_d7[f_df_d7['event_value'] == 40]
+
+    f_df_d0_f50 = f_df_d0[f_df_d0['event_value'] == 50]
+    f_df_d1_f50 = f_df_d1[f_df_d1['event_value'] == 50]
+    f_df_d3_f50 = f_df_d3[f_df_d3['event_value'] == 50]
+    f_df_d7_f50 = f_df_d7[f_df_d7['event_value'] == 50]
+
+    df['n_finish_quest_40_d0'] = f_df_d0_f40[agg_cols].groupby(by='user_id').count()['event_value']
+    df['n_finish_quest_40_d1'] = f_df_d1_f40[agg_cols].groupby(by='user_id').count()['event_value']
+    df['n_finish_quest_40_d3'] = f_df_d3_f40[agg_cols].groupby(by='user_id').count()['event_value']
+    df['n_finish_quest_40_d7'] = f_df_d7_f40[agg_cols].groupby(by='user_id').count()['event_value']
+
+    df['n_finish_quest_40_d0'] = df['n_finish_quest_40_d0'].fillna(0).astype(int)
+    df['n_finish_quest_40_d1'] = df['n_finish_quest_40_d1'].fillna(0).astype(int)
+    df['n_finish_quest_40_d3'] = df['n_finish_quest_40_d3'].fillna(0).astype(int)
+    df['n_finish_quest_40_d7'] = df['n_finish_quest_40_d7'].fillna(0).astype(int)
+
+    df['n_finish_quest_50_d0'] = f_df_d0_f50[agg_cols].groupby(by='user_id').count()['event_value']
+    df['n_finish_quest_50_d1'] = f_df_d1_f50[agg_cols].groupby(by='user_id').count()['event_value']
+    df['n_finish_quest_50_d3'] = f_df_d3_f50[agg_cols].groupby(by='user_id').count()['event_value']
+    df['n_finish_quest_50_d7'] = f_df_d7_f50[agg_cols].groupby(by='user_id').count()['event_value']
+
+    df['n_finish_quest_50_d0'] = df['n_finish_quest_50_d0'].fillna(0).astype(int)
+    df['n_finish_quest_50_d1'] = df['n_finish_quest_50_d1'].fillna(0).astype(int)
+    df['n_finish_quest_50_d3'] = df['n_finish_quest_50_d3'].fillna(0).astype(int)
+    df['n_finish_quest_50_d7'] = df['n_finish_quest_50_d7'].fillna(0).astype(int)
+
     return df[[
         'finish_quest_sum_d0', 'finish_quest_sum_d1', 'finish_quest_sum_d3', 'finish_quest_sum_d7',
+        'n_finish_quest_40_d0', 'n_finish_quest_40_d1', 'n_finish_quest_40_d3', 'n_finish_quest_40_d7',
+        'n_finish_quest_50_d0', 'n_finish_quest_50_d1', 'n_finish_quest_50_d3', 'n_finish_quest_50_d7',
     ]]
 
 
@@ -165,8 +248,14 @@ def __generate_level_features(users_df: pd.DataFrame, events_df: pd.DataFrame) -
     df['level_up_max_d3'] = df['level_up_max_d3'].fillna(0).astype(int)
     df['level_up_max_d7'] = df['level_up_max_d7'].fillna(0).astype(int)
 
+    df['levels_unique_d0'] = lv_df_d0[['user_id', 'event_value']].groupby(by='user_id').nunique()['event_value']
+    df['levels_unique_d1'] = lv_df_d1[['user_id', 'event_value']].groupby(by='user_id').nunique()['event_value']
+    df['levels_unique_d3'] = lv_df_d3[['user_id', 'event_value']].groupby(by='user_id').nunique()['event_value']
+    df['levels_unique_d7'] = lv_df_d7[['user_id', 'event_value']].groupby(by='user_id').nunique()['event_value']
+
     return df[[
         'level_up_max_d0', 'level_up_max_d1', 'level_up_max_d3', 'level_up_max_d7',
+        'levels_unique_d0', 'levels_unique_d1', 'levels_unique_d3', 'levels_unique_d7',
     ]]
 
 
@@ -189,6 +278,34 @@ def __generate_payment_features(users_df: pd.DataFrame, events_df: pd.DataFrame)
     df['payment_sum_d3'] = df['payment_sum_d3'].fillna(0)
     df['payment_sum_d7'] = df['payment_sum_d7'].fillna(0)
 
+    df['payment_max_d0'] = p_df_d0[['user_id', 'event_value']].groupby(by='user_id').max()['event_value']
+    df['payment_max_d1'] = p_df_d1[['user_id', 'event_value']].groupby(by='user_id').max()['event_value']
+    df['payment_max_d3'] = p_df_d3[['user_id', 'event_value']].groupby(by='user_id').max()['event_value']
+    df['payment_max_d7'] = p_df_d7[['user_id', 'event_value']].groupby(by='user_id').max()['event_value']
+
+    df['payment_max_d0'] = df['payment_max_d0'].fillna(0)
+    df['payment_max_d1'] = df['payment_max_d1'].fillna(0)
+    df['payment_max_d3'] = df['payment_max_d3'].fillna(0)
+    df['payment_max_d7'] = df['payment_max_d7'].fillna(0)
+
+    df['payment_mean_d0'] = p_df_d0[['user_id', 'event_value']].groupby(by='user_id').mean()['event_value']
+    df['payment_mean_d1'] = p_df_d1[['user_id', 'event_value']].groupby(by='user_id').mean()['event_value']
+    df['payment_mean_d3'] = p_df_d3[['user_id', 'event_value']].groupby(by='user_id').mean()['event_value']
+    df['payment_mean_d7'] = p_df_d7[['user_id', 'event_value']].groupby(by='user_id').mean()['event_value']
+
+    df['payment_mean_d0'] = df['payment_mean_d0'].fillna(0)
+    df['payment_mean_d1'] = df['payment_mean_d1'].fillna(0)
+    df['payment_mean_d3'] = df['payment_mean_d3'].fillna(0)
+    df['payment_mean_d7'] = df['payment_mean_d7'].fillna(0)
+
+    df['n_payments_d0'] = p_df_d0[['user_id', 'event_value']].groupby(by='user_id').count()['event_value']
+    df['n_payments_d1'] = p_df_d1[['user_id', 'event_value']].groupby(by='user_id').count()['event_value']
+    df['n_payments_d3'] = p_df_d3[['user_id', 'event_value']].groupby(by='user_id').count()['event_value']
+    df['n_payments_d7'] = p_df_d7[['user_id', 'event_value']].groupby(by='user_id').count()['event_value']
+
     return df[[
         'payment_sum_d0', 'payment_sum_d1', 'payment_sum_d3', 'payment_sum_d7',
+        'payment_max_d0', 'payment_max_d1', 'payment_max_d3', 'payment_max_d7',
+        'payment_mean_d0', 'payment_mean_d1', 'payment_mean_d3', 'payment_mean_d7',
+        'n_payments_d0', 'n_payments_d1', 'n_payments_d3', 'n_payments_d7',
     ]]
