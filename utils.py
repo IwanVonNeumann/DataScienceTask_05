@@ -72,3 +72,13 @@ def enumerate_float(x: pd.Series, q: int = 10, process_zeros: bool = False) -> p
         return t.cat.add_categories(0).fillna(0)
     else:
         return t
+
+
+def get_gain_ranking(model):
+    importance_df = pd.DataFrame()
+
+    importance_df['gain'] = model.get_booster().get_score(importance_type='gain')
+
+    importance_df['gain'] = importance_df['gain'] / importance_df['gain'].sum()
+
+    return importance_df.sort_values(by='gain', ascending=False)
